@@ -11,48 +11,33 @@ export default class UserRepository {
     static async findByEmail(email) {
         // Intentar buscar por email
         const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
-        if (rows.length > 0) {
-            return rows[0];
-        }
-        return null;
+        return rows[0] || null;
     }
 
     static async findByPhone(phone) {
-        //busqueda por telefono
+        //búsqueda por teléfono
         const [rows] = await db.query('SELECT * FROM users WHERE phone = ?', [phone]);
-        if (rows.length > 0) {
-            return rows[0];
-        }
-        return null;
+        return rows[0] || null;
     }
 
     static async findByNameAndLastname(name, lastname) {
         // Intentar buscar por nombre Y apellido (coincidencia exacta)
         const [rows] = await db.query('SELECT * FROM users WHERE name = ? AND lastname= ?', [name, lastname]);
-        if (rows.length > 0) {
-            return rows[0]; // Si se encuentra, lo retorna
-        }
-        return null;
+        return rows[0] || null;
     }
 
 
     // Obtener un usuario por ID
     static async getUserById(id) {
         const [rows] = await db.query('SELECT * FROM users WHERE id = ?', [id]);
-        if (rows.length > 0) {
-            return rows[0];
-        }
-        return null;
+        return rows[0] || null;
     }
 
 
     // verifica si el nuevo usuario existe
     static async findByEmailOrPhone(email, phone) {
         const [rows] = await db.query('SELECT * FROM users WHERE email=? OR phone=? ', [email, phone])
-        if (rows.length > 0) {
-            return rows[0];
-        }
-        return null;
+        return rows[0] || null;
     }
 
     // Crear un nuevo usuario
@@ -73,4 +58,10 @@ export default class UserRepository {
          );
          return result.affectedRows > 0;
      }
+
+     //eliminar el usuario creado
+    static async deleteUser(id) {
+        const [result] = await db.query('DELETE FROM users WHERE id = ?', [id]);
+        return result.affectedRows > 0;
+    }
 }

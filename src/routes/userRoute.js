@@ -4,11 +4,12 @@ import UserControllers from "../controllers/userControllers.js";
 
 
 const router = express.Router()
-
-    .get('/users/search', UserControllers.getUsers)
     .get('/users', UserControllers.getAllUsers)
+    .get('/users/search', UserControllers.getUsers)
+    .get('/users/:id', UserControllers.getUserById)
     .post('/users', validateUser, UserControllers.createUser)
     .put('/users/:id', validateUser, UserControllers.updateUser)
+    .delete('/users/:id', UserControllers.deleteUser)
 
-    .get('/users/:id', UserControllers.getUserById)
+
 export default router;

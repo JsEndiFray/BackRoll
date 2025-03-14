@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # BackRoll
 
 # Proyecto de Gestión de Roles con Node.js y MySQL

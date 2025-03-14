@@ -4,12 +4,11 @@ import cors from "cors";
 process.loadEnvFile();
 
 import UserRoutes from "./src/routes/userRoute.js";
-
-
-
-
 const app = express();
 const port = process.env.PORT || 3500;
+
+
+
 //middleware
 app.use(express.json());
 app.use(cors());
