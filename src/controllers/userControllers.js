@@ -38,16 +38,15 @@ export default class UserControllers {
         try {
             const id = Number(req.params.id);
             if (isNaN(id)) {
-                return res.status(400).json({ error: "ID inválido, debe ser un número" });
+                return res.status(400).json({error: "ID inválido, debe ser un número"});
             }
             const user = await UserServices.getUserById(id);
             if (!user) {
-                return res.status(404).json({ msg: `Usuario con ID ${id} no encontrado.` });
+                return res.status(404).json({msg: `Usuario con ID ${id} no encontrado.`});
             }
-
-            return res.status(200).json({ msg: "Usuario encontrado", user });
+            return res.status(200).json({msg: "Usuario encontrado", user});
         } catch (error) {
-            res.status(500).json({ msg: "Error interno del servidor" });
+            res.status(500).json({msg: "Error interno del servidor"});
         }
     }
 
@@ -93,20 +92,21 @@ export default class UserControllers {
         }
 
     }
+
     //eliminar el usuario creado
     static async deleteUser(req, res) {
-        try{
+        try {
             const id = Number(req.params.id);
             if (isNaN(id)) {
                 return res.status(400).json({error: "ID inválido, debe ser un numero (controllers)"})
             }
             const deleted = await UserServices.deleteUser(id)
-            if(!deleted){
+            if (!deleted) {
                 return res.status(404).json({msg: `Usuario con ID ${id} no encontrado`})
             }
             return res.status(200).json({msg: `Usuario con ID ${id} ha sido eliminado`});
-        }catch (error){
-            res.status(500).json({msg: "Error interno del servidor" })
+        } catch (error) {
+            res.status(500).json({msg: "Error interno del servidor"})
         }
 
     }
