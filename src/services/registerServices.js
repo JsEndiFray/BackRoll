@@ -1,58 +1,107 @@
-import registerRepository from "../repository/registerRepository.js";
-import UserRepository from "../repository/userRepository.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import registerRepository from "../repository/registerRepository.js";
 
-export default class AuthService {
+process.loadEnvFile();
+const SECRET_KEY = process.env.JWT_SECRET
 
-    // Registrar usuario para login
-    static async createRegister(username, password, email, rol) {
-        try {
-            // 1 Buscar al usuario en data_register por su email
-            const user = await registerRepository.getUserByUserRegister(username, email);
-            if (!user){
-                return { error: "No existe ningún usuario registrado" }
-            }
+export default class AuthRegisterService {
 
-            // 2 Crear su usuario en data_register usando el user_id de data_base
-            const user_id = user.id;
-            const newUser = await registerRepository.createUserRegister(user_id, username, password, rol);
-
-            return newUser ? { success: "Usuario registrado correctamente" } : { error: "No se pudo registrar el usuario" };
-        } catch (error) {
-            console.error("Error en registerUser:", error);
-            return { error: "Error en el servidor" };
+    // validación de administrador
+    static async isAdmin(userID) {
+        const user = await registerRepository.getUserById(userID);
+        if (!user || user.rol !== "admin") {
+            throw new Error("Acceso denegado. Solo el administrador autorizado.")
         }
     }
 
-    // login de usuario
+    //obtener datos de los registros (todos)
+    static async getAllRegisters() {
+        return await registerRepository.getAllRegister();
+    }
+
+    //Búsqueda del usuario (todos)
+    static async getUser(username, email) {
+        if (!username && !email) return null;
+        const user = await registerRepository.findByUsernameOrEmail(username, email);
+        return user || null;
+
+    }
+
+    // Obtener un usuario por ID
+    static async getUserById(id) {
+        const user = await registerRepository.getUserById(id);
+        if (!user) return null;
+        return registerRepository.getUserById(id);
+
+    }
+
+    //  crea y verifica si existe (solo admin)
+    static async createRegister(adminId, userData) {
+        await this.isAdmin(adminId); // validación de administrador
+        const {username, email, password} = userData;
+        const existingUser = await registerRepository.findByUsernameOrEmail(username, email);
+        if (existingUser) {
+            throw new Error("El nombre del usuario ya esta registrado.")
+        }
+        //Hashear la contraseña antes de guardarla
+        userData.password = await bcrypt.hash(password, 10);
+        return await registerRepository.createUserName(userData);
+    }
+
+    // actualizar al usuario
+    static async updateRegister(adminId, userData) {
+        await this.isAdmin(adminId); // validación de administrador
+        const {username, email} = userData;
+        const existingUser = await registerRepository.findByUsernameOrEmail(username, email);
+        if (!existingUser) {
+            throw new Error("Usuario no encontrado")
+        }
+        //se quiere actualizar la contraseña, la hasheamos
+        if (userData.password) {
+            userData.password = await bcrypt.hash(userData.password, 10);
+        }
+        return await registerRepository.updateRegister(userData);
+    }
+
+    //eliminar el usuario
+    static async deleteRegister(adminId, registerId) {
+        await this.isAdmin(adminId);  // validación de administrador
+
+        const existingUser = await registerRepository.getUserById(registerId);
+        if (!existingUser) {
+            throw new Error("Usuario no encontrado")
+        }
+        return await registerRepository.deleteRegister(registerId);
+    }
+
+    //LOGIN Verifica usuario y genera JWT
     static async login(username, password) {
-        try {
-            const user = await registerRepository.getUserByUserRegister(username);
-            if (!user){
-                return { error: "Usuario no encontrado (login)" };
-            }
-            const isMatch = await bcrypt.compare(password, user.password);
-            if (!isMatch){
-                return { error: "Contraseña incorrecta" };
-            }
-
-            const token = jwt.sign(
-                { user_id: user.user_id, username: user.username, rol: user.rol },
-                process.env.JWT_SECRET,
-                { expiresIn: "1h" }
-            );
-
-            return { token, user: { id: user.user_id, username: user.username, rol: user.rol } };
-        } catch (error) {
-            console.error("Error en login:", error);
-            return { error: "Error en el servidor" };
+        const user = await registerRepository.findByUsernameOrEmail(username);
+        if (!user) {
+            throw new Error("Contraseña invalida");
         }
+        //Comparar la contraseña con la hasheada
+        const isPasswordValid = bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            throw new Error("Contraseña invalida");
+        }
+        // Generar token JWT
+        const token = jwt.sign({
+            id: user.id, username: user.username, role: user.role
+        }, SECRET_KEY, {expiresIn: "1h"});
+        return {token, user};
     }
 
+    //verificación del token
+    static verifyToken(token) {
+        try {
+            return jwt.verify(token, SECRET_KEY)
+        } catch (error) {
+            throw new Error("Token invalido")
 
-
-
+        }
+    }
 
 
 }

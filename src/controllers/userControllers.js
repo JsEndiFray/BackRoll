@@ -38,7 +38,7 @@ export default class UserControllers {
         try {
             const id = Number(req.params.id);
             if (isNaN(id)) {
-                return res.status(400).json({error: "ID inválido, debe ser un número"});
+                return res.status(400).json({error: "ID inválido."});
             }
             const user = await UserServices.getUserById(id);
             if (!user) {
