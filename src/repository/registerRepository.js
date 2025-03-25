@@ -23,26 +23,26 @@ export default class registerRepository {
 
     // crea el username
     static async createUserName(userData) {
-        const {user_id, username, password, rol} = userData;
-        const [rows] = await db.query('INSERT INTO register (user_id, username, password, rol, date_create, date_update) VALUES (?, ?, ?, ?, NOW(), NOW())', [user_id, username, password, rol]);
+        const {user_id, username, password, email, rol} = userData;
+        const [rows] = await db.query('INSERT INTO register (user_id, username, password, email, rol, date_create, date_update) VALUES (?, ?, ?, ?, ?, NOW(), NOW())', [user_id, username, password, email, rol]);
         return rows.insertId;
     }
     // 🔹 Actualizar usuario (puede incluir o no la contraseña)
     static async updateRegister(userData) {
-        const { username, password, rol } = userData;
+        const { username, password, email, rol } = userData;
 
         if (password) {
             // se quiere actualizar la contraseña
             const [result] = await db.query(
-                'UPDATE register SET password = ?, rol = ?, date_update = NOW() WHERE username = ?',
-                [password, rol, username]
+                'UPDATE register SET password = ?, email = ?, rol = ?, date_update = NOW() WHERE username = ?',
+                [password, email, rol, username]
             );
             return result.affectedRows;
         } else {
             //  no se actualiza la contraseña
             const [result] = await db.query(
                 'UPDATE register SET rol = ?, date_update = NOW() WHERE username = ?',
-                [rol, username]
+                [email, rol, username]
             );
             return result.affectedRows;
         }

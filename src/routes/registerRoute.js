@@ -5,8 +5,9 @@ import registerController from "../controllers/registerControllers.js";
 
 const router = express.Router()
 
-.get('/register', registerController.getAllRegisters)
-.get('/register/search',registerController.getUser)
-.get('/register/:id', registerController.getUserById )
+    .get('/register', registerController.getAllRegisters)
+    .get('/register/search',registerController.getUser)
+    .get('/register/:id', registerController.getUserById )
+    .post('/register', ...ValidatorRegister, registerController.createRegister)
 
 export default router;

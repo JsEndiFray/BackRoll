@@ -28,7 +28,7 @@ export default class AuthRegisterService {
 
     }
 
-    // Obtener un usuario por ID
+    // Obtener un usuario por ID (todos)
     static async getUserById(id) {
         const user = await registerRepository.getUserById(id);
         if (!user) return null;
@@ -41,21 +41,21 @@ export default class AuthRegisterService {
         await this.isAdmin(adminId); // validación de administrador
         const {username, email, password} = userData;
         const existingUser = await registerRepository.findByUsernameOrEmail(username, email);
-        if (existingUser) {
-            throw new Error("El nombre del usuario ya esta registrado.")
-        }
+        if (existingUser) return null;
         //Hashear la contraseña antes de guardarla
         userData.password = await bcrypt.hash(password, 10);
         return await registerRepository.createUserName(userData);
     }
 
-    // actualizar al usuario
+
+    // actualizar al usuario (solo admin)
     static async updateRegister(adminId, userData) {
         await this.isAdmin(adminId); // validación de administrador
-        const {username, email} = userData;
+
+        const {id, username, email} = userData;
         const existingUser = await registerRepository.findByUsernameOrEmail(username, email);
-        if (!existingUser) {
-            throw new Error("Usuario no encontrado")
+        if (existingUser && existingUser.id !== id) {
+            return null; // Ya existe otro usuario con ese username o email
         }
         //se quiere actualizar la contraseña, la hasheamos
         if (userData.password) {
@@ -74,6 +74,9 @@ export default class AuthRegisterService {
         }
         return await registerRepository.deleteRegister(registerId);
     }
+
+
+    git
 
     //LOGIN Verifica usuario y genera JWT
     static async login(username, password) {
@@ -102,6 +105,7 @@ export default class AuthRegisterService {
 
         }
     }
+
 
 
 }
