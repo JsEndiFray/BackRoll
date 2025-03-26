@@ -23,11 +23,11 @@ export default class registerRepository {
 
     // crea el username
     static async createUserName(userData) {
-        const {user_id, username, password, email, rol} = userData;
-        const [rows] = await db.query('INSERT INTO register (user_id, username, password, email, rol, date_create, date_update) VALUES (?, ?, ?, ?, ?, NOW(), NOW())', [user_id, username, password, email, rol]);
+        const {username, password, email, rol} = userData;
+        const [rows] = await db.query('INSERT INTO register (username, password, email, rol, date_create, date_update) VALUES (?, ?, ?, ?, NOW(), NOW())', [ username, password, email, rol]);
         return rows.insertId;
     }
-    // 🔹 Actualizar usuario (puede incluir o no la contraseña)
+    //  Actualizar usuario (puede incluir o no la contraseña)
     static async updateRegister(userData) {
         const { username, password, email, rol } = userData;
 

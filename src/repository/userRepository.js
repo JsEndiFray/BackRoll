@@ -1,6 +1,6 @@
 import db from '../DB/dbConnect.js';
 
-export default class UserRepository {
+export default class userRepository {
     // Obtener todos los usuarios
     static async getAllUsers() {
         const [rows] = await db.query('SELECT * FROM users');

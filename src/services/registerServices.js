@@ -23,26 +23,22 @@ export default class AuthRegisterService {
     //Búsqueda del usuario (todos)
     static async getUser(username, email) {
         if (!username && !email) return null;
-        const user = await registerRepository.findByUsernameOrEmail(username, email);
-        return user || null;
-
+        await registerRepository.findByUsernameOrEmail(username, email);
     }
 
     // Obtener un usuario por ID (todos)
     static async getUserById(id) {
-        const user = await registerRepository.getUserById(id);
-        if (!user) return null;
-        return registerRepository.getUserById(id);
-
+        return await registerRepository.getUserById(id) || null;
     }
-
     //  crea y verifica si existe (solo admin)
     static async createRegister(adminId, userData) {
         await this.isAdmin(adminId); // validación de administrador
+
         const {username, email, password} = userData;
         const existingUser = await registerRepository.findByUsernameOrEmail(username, email);
         if (existingUser) return null;
-        //Hashear la contraseña antes de guardarla
+
+        //Hash la contraseña antes de guardarla
         userData.password = await bcrypt.hash(password, 10);
         return await registerRepository.createUserName(userData);
     }
@@ -55,46 +51,39 @@ export default class AuthRegisterService {
         const {id, username, email} = userData;
         const existingUser = await registerRepository.findByUsernameOrEmail(username, email);
         if (existingUser && existingUser.id !== id) {
-            return null; // Ya existe otro usuario con ese username o email
+            return null;
         }
-        //se quiere actualizar la contraseña, la hasheamos
+        //se quiere actualizar la contraseña, la hash
         if (userData.password) {
             userData.password = await bcrypt.hash(userData.password, 10);
         }
         return await registerRepository.updateRegister(userData);
     }
 
-    //eliminar el usuario
-    static async deleteRegister(adminId, registerId) {
+    //eliminar el usuario (solo admin)
+    static async deleteRegister(adminId, userId) {
         await this.isAdmin(adminId);  // validación de administrador
 
-        const existingUser = await registerRepository.getUserById(registerId);
-        if (!existingUser) {
-            throw new Error("Usuario no encontrado")
-        }
-        return await registerRepository.deleteRegister(registerId);
+        const existingUser = await registerRepository.getUserById(userId);
+        if (!existingUser) return null;
+        return await registerRepository.deleteRegister(userId);
     }
-
-
-    git
 
     //LOGIN Verifica usuario y genera JWT
     static async login(username, password) {
         const user = await registerRepository.findByUsernameOrEmail(username);
-        if (!user) {
-            throw new Error("Contraseña invalida");
-        }
+        if (!user) return { error: true };
         //Comparar la contraseña con la hasheada
         const isPasswordValid = bcrypt.compare(password, user.password);
-        if (!isPasswordValid) {
-            throw new Error("Contraseña invalida");
-        }
+        if (!isPasswordValid) return { error: true };
+
+
         // Generar token JWT
         const token = jwt.sign({
             id: user.id, username: user.username, role: user.role
         }, SECRET_KEY, {expiresIn: "1h"});
         return {token, user};
-    }
+    };
 
     //verificación del token
     static verifyToken(token) {

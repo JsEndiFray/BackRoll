@@ -69,10 +69,14 @@ export default class RegisterControllers {
             if (!errors.isEmpty()) {
                 return res.status(400).json({msg: "Errores de validación", errors: errors.array()});
             }
+
+            const adminId = req.user.id;
             const {username, password, email, rol} = req.body;
-            const user = await registerServices.createRegister(username, password, email, rol);
-            if (user) {
-                return res.status(400).json({msg: "El nombre del usuario ya esta registrado."});
+            const userData = { username, password, email, rol };
+
+            const user = await registerServices.createRegister(adminId, userData);
+            if (!user) {
+                return res.status(400).json({msg: "El usuario ya esta registrado."});
             }
             res.status(201).json({msg: "Usuario creado correctamente:", user});
         } catch (error) {
@@ -83,53 +87,66 @@ export default class RegisterControllers {
 
     //actualizar el usuario (solo admin)
     static async updateUser(req, res) {
-        try{
+        try {
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
                 return res.status(400).json({msg: "Errores de validación", errors: errors.array()});
             }
 
-            const adminId = Number(req.params.id);
-            if (isNaN(adminId)) {
-                return res.status(400).json({ error: "ID inválido." });
-            }
-
+            const adminId = req.user.id;
+            const id = Number(req.params.id);
             const { username, password, email, rol } = req.body;
-            const userData = { id: adminId, username, password, email, rol };
+            const userData = { id, username, password, email, rol };
 
-            const user = await registerServices.updateRegister(adminId, userData);
-            if(!user) {
+
+            const updatedUser = await registerServices.updateRegister(adminId, userData);
+            if (!updatedUser) {
                 return res.status(404).json({msg: "Usuario o email ya está en uso por otro usuario."});
             }
-            return res.status(200).json({msg: "Usuario actualizado correctamente:", user});
+            return res.status(200).json({msg: "Usuario actualizado correctamente:", user: updatedUser});
 
-        }catch(error){
+        } catch (error) {
             console.error('Error al actualizar usuario.', error);
-            res.status(500).json({msg: 'Error al actualizar usuario', error});
+            res.status(500).json({msg: 'Error al actualizar usuario', error: error.message});
         }
     }
 
-    //eliminar el usuario
-
+    //eliminar el usuario (solo admin)
+    static async deleteRegister(req, res) {
+        try{
+            const adminId = req.user.id;
+            const id = Number(req.params.id);
+            if (isNaN(id)) {
+                return res.status(400).json({error: "ID inválidos."});
+            }
+            const deleted = await registerServices.deleteRegister(adminId, id)
+            if (!deleted) {
+                return res.status(400).json({msg: `Usuario con ID ${id} no encontrado`})
+            }
+            return res.status(200).json({msg: `Usuario con ID ${id} ha sido eliminado`});
+        }catch (error) {
+            console.error('Error al eliminar usuario.', error);
+            res.status(500).json({msg: 'Error al eliminar usuario', error: error.message});
+        }
+    }
 
     //LOGIN Verifica usuario y genera JWT
 
-    /*
+
     static async login(req, res) {
         try {
             const {username, password} = req.body;
-            const response = await registerServices.login(username, password);
+            const result = await registerServices.login(username, password);
 
-            if (response.error) {
-                return res.status(401).json({msg: response.error});
+            if (!result || result.error) {
+                return res.status(401).json({msg: "Contraseña inválidas"});
             }
-
-            res.json({msg: "Inicio de sesión exitoso", token: response.token, user: response.user});
+            res.json({msg: "Inicio de sesión exitoso", token: result.token, user: result.user});
         } catch (error) {
             console.error("Error en login:", error);
             res.status(500).json({msg: "Error en el servidor"});
         }
     }
-    */
+
 
 }
