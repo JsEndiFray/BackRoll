@@ -3,7 +3,7 @@ import db from '../DB/dbConnect.js'
 
 export default class registerRepository {
     //obtener datos de los registros
-    static async getAllRegister() {
+    static async getAllUsers() {
         const [rows] = await db.query('SELECT * FROM register');
         return rows;
     }
@@ -22,13 +22,13 @@ export default class registerRepository {
     }
 
     // crea el username
-    static async createUserName(userData) {
+    static async createUser(userData) {
         const {username, password, email, rol} = userData;
         const [rows] = await db.query('INSERT INTO register (username, password, email, rol, date_create, date_update) VALUES (?, ?, ?, ?, NOW(), NOW())', [ username, password, email, rol]);
         return rows.insertId;
     }
     //  Actualizar usuario (puede incluir o no la contraseña)
-    static async updateRegister(userData) {
+    static async updateUser(userData) {
         const { username, password, email, rol } = userData;
 
         if (password) {
@@ -48,7 +48,7 @@ export default class registerRepository {
         }
     }
     //eliminar el usuario
-    static async deleteRegister(registerId) {
+    static async deleteUser(registerId) {
         const [result] = await db.query('DELETE FROM register WHERE id = ?', [registerId]);
         return result.affectedRows;
     }

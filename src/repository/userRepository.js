@@ -6,8 +6,18 @@ export default class userRepository {
         const [rows] = await db.query('SELECT * FROM users');
         return rows;
     }
-
+//METODOS DE BUSQUEDAS
     // búsqueda por email, teléfono o por nombre y apellido
+    static async findByName(name) {
+        const [rows] = await db.query('SELECT * FROM users WHERE LOWER(name) = LOWER(?)', [name]);
+        return rows[0] || null;
+    }
+
+    static async findByLastname(lastname) {
+        const [rows] = await db.query('SELECT * FROM users WHERE LOWER(lastname) = LOWER(?)', [lastname]);
+        return rows[0] || null;
+    }
+
     static async findByEmail(email) {
         // Intentar buscar por email
         const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
@@ -22,7 +32,7 @@ export default class userRepository {
 
     static async findByNameAndLastname(name, lastname) {
         // Intentar buscar por nombre Y apellido (coincidencia exacta)
-        const [rows] = await db.query('SELECT * FROM users WHERE name = ? AND lastname= ?', [name, lastname]);
+        const [rows] = await db.query('SELECT * FROM users WHERE LOWER(name) = LOWER(?) AND LOWER(lastname) = LOWER(?)', [name, lastname]);
         return rows[0] || null;
     }
 

@@ -16,8 +16,8 @@ export default class AuthRegisterService {
     }
 
     //obtener datos de los registros (todos)
-    static async getAllRegisters() {
-        return await registerRepository.getAllRegister();
+    static async getAllUsers() {
+        return await registerRepository.getAllUsers();
     }
 
     //Búsqueda del usuario (todos)
@@ -31,7 +31,7 @@ export default class AuthRegisterService {
         return await registerRepository.getUserById(id) || null;
     }
     //  crea y verifica si existe (solo admin)
-    static async createRegister(adminId, userData) {
+    static async createUser(adminId, userData) {
         await this.isAdmin(adminId); // validación de administrador
 
         const {username, email, password} = userData;
@@ -40,12 +40,12 @@ export default class AuthRegisterService {
 
         //Hash la contraseña antes de guardarla
         userData.password = await bcrypt.hash(password, 10);
-        return await registerRepository.createUserName(userData);
+        return await registerRepository.createUser(userData);
     }
 
 
     // actualizar al usuario (solo admin)
-    static async updateRegister(adminId, userData) {
+    static async updateUser(adminId, userData) {
         await this.isAdmin(adminId); // validación de administrador
 
         const {id, username, email} = userData;
@@ -57,30 +57,30 @@ export default class AuthRegisterService {
         if (userData.password) {
             userData.password = await bcrypt.hash(userData.password, 10);
         }
-        return await registerRepository.updateRegister(userData);
+        return await registerRepository.updateUser(userData);
     }
 
     //eliminar el usuario (solo admin)
-    static async deleteRegister(adminId, userId) {
+    static async deleteUser(adminId, userId) {
         await this.isAdmin(adminId);  // validación de administrador
 
         const existingUser = await registerRepository.getUserById(userId);
         if (!existingUser) return null;
-        return await registerRepository.deleteRegister(userId);
+        return await registerRepository.deleteUser(userId);
     }
 
     //LOGIN Verifica usuario y genera JWT
     static async login(username, password) {
         const user = await registerRepository.findByUsernameOrEmail(username);
         if (!user) return { error: true };
-        //Comparar la contraseña con la hasheada
+        //Comparar la contraseña con la hash
         const isPasswordValid = bcrypt.compare(password, user.password);
         if (!isPasswordValid) return { error: true };
 
 
         // Generar token JWT
         const token = jwt.sign({
-            id: user.id, username: user.username, role: user.role
+            id: user.id, username: user.username, rol: user.rol
         }, SECRET_KEY, {expiresIn: "1h"});
         return {token, user};
     };

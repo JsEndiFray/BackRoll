@@ -6,9 +6,9 @@ export default class RegisterControllers {
 
 
     //obtener los datos registrados
-    static async getAllRegisters(req, res) {
+    static async getAllUsers(req, res) {
         try {
-            const users = await registerServices.getAllRegisters();
+            const users = await registerServices.getAllUsers();
             if (!users) {
                 return {error: 'No existe ningún usuario registrado'}
             }
@@ -62,7 +62,7 @@ export default class RegisterControllers {
     }
 
     //  crea y verifica si existe (solo admin)
-    static async createRegister(req, res) {
+    static async createUser(req, res) {
         try {
             //capturar error de validación
             const errors = validationResult(req);
@@ -74,7 +74,7 @@ export default class RegisterControllers {
             const {username, password, email, rol} = req.body;
             const userData = { username, password, email, rol };
 
-            const user = await registerServices.createRegister(adminId, userData);
+            const user = await registerServices.createUser(adminId, userData);
             if (!user) {
                 return res.status(400).json({msg: "El usuario ya esta registrado."});
             }
@@ -99,7 +99,7 @@ export default class RegisterControllers {
             const userData = { id, username, password, email, rol };
 
 
-            const updatedUser = await registerServices.updateRegister(adminId, userData);
+            const updatedUser = await registerServices.updateUser(adminId, userData);
             if (!updatedUser) {
                 return res.status(404).json({msg: "Usuario o email ya está en uso por otro usuario."});
             }
@@ -112,14 +112,14 @@ export default class RegisterControllers {
     }
 
     //eliminar el usuario (solo admin)
-    static async deleteRegister(req, res) {
+    static async deleteUser(req, res) {
         try{
             const adminId = req.user.id;
             const id = Number(req.params.id);
             if (isNaN(id)) {
                 return res.status(400).json({error: "ID inválidos."});
             }
-            const deleted = await registerServices.deleteRegister(adminId, id)
+            const deleted = await registerServices.deleteUser(adminId, id)
             if (!deleted) {
                 return res.status(400).json({msg: `Usuario con ID ${id} no encontrado`})
             }

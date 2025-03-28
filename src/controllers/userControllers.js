@@ -19,10 +19,10 @@ export default class UserControllers {
     // búsqueda por email o por nombre y apellido
     static async getUsers(req, res) {
         try {
-            const {email, name, lastname, phone} = req.query;
+            const {name, lastname,email, phone} = req.query;
             // Validar que al menos un criterio de búsqueda esté presente
-            if (!email && !phone && (!name || !lastname)) {
-                return res.status(400).json({error: "Debes proporcionar un email, teléfono o nombre y apellido."});
+            if (!email && !phone && !name && !lastname) {
+                return res.status(400).json({ error: "Debes proporcionar al menos un criterio de búsqueda (nombre, apellido, email o teléfono)." });
             }
             const user = await UserServices.getUsers(email, name, lastname, phone);
             if (!user) {
@@ -59,12 +59,21 @@ export default class UserControllers {
             if (!errors.isEmpty()) {
                 return res.status(400).json({msg: "Errores de validación", errors: errors.array()});
             }
+            if (!req.user?.rol) {
+                return res.status(401).json({ msg: "No autorizado." });
+            }
+            if (req.user.rol === 'empleado') {
+                req.body.rol = 'cliente'; // 🔒 Forzado sí o sí
+            }
             const created = await UserServices.createUser(req.body);
             // si lanza el error si el usuario existe
             if (!created) {
                 return res.status(400).json({msg:"El usuario ya existe." });
             }
-            return res.status(201).json({msg: "Usuario creado correctamente", user: created});
+            return res.status(201).json({
+                msg: "Usuario creado correctamente",
+                user: created
+            });
         } catch (error) {
             console.error("Error al crear usuario:", error);
             res.status(500).json({msg: "Error interno del servidor"});
@@ -83,9 +92,13 @@ export default class UserControllers {
             if (isNaN(id)){
                 return res.status(400).json({ msg: "ID inválido." });
             }
+            //no pueden actualizar el rol los empleados
+            if (req.user?.rol === 'empleado') {
+                delete req.body.rol;
+            }
 
-            const { username, password, email, rol } = req.body;
-            const user = { id, username, password, email, rol };
+            const { name, lastname, email, rol, message } = req.body;
+            const user = { id, name, lastname, email, rol, message };
 
             const updated = await UserServices.updateUser(user);
             if (!updated) {
@@ -103,6 +116,10 @@ export default class UserControllers {
     //eliminar el usuario creado
     static async deleteUser(req, res) {
         try {
+            //los empleados no tienen permiso
+            if (req.user?.rol === 'empleado') {
+                return res.status(403).json({ msg: "No tienes permiso para eliminar usuarios." });
+            }
             const id = Number(req.params.id);
             if (isNaN(id)) {
                 return res.status(400).json({error: "ID inválido, debe ser un numero (controllers)"})

@@ -10,12 +10,14 @@ export default class UserServices {
 
     // búsqueda por email o por nombre y apellido
     static async getUsers(email, name, lastname, phone) {
-        if (!email && !phone && (!name || !lastname)) return null;
+        if (!email && !phone && !name && !lastname) return null;
 
         let user = null;
         if (email) user = await userRepository.findByEmail(email);
         if (!user && phone) user = await userRepository.findByPhone(phone);
         if (!user && name && lastname) user = await userRepository.findByNameAndLastname(name, lastname);
+        if (!user && name && !lastname) user = await userRepository.findByName(name);
+        if (!user && lastname && !name) user = await userRepository.findByLastname(lastname);
 
         return user;
     }
